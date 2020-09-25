@@ -132,27 +132,39 @@ POST /accidentalIMLogOut
 控制端已连接后会发送下列信息
 
 ```json
-{"code": 200, "content": {"id": "控制端的 ID", "status":3}, "type": 1}
+{"code": 200, "content": "{\"id\": \"控制端的 ID\", \"status\":3}", "type": 1}
 ```
 只需要判断 content 中的 status 为 3 即可。
+
+注意 content 内为 Json 字符串而非对象。
 
 收到此消息后被控端会进入受控模式并关闭等待连接对话框。记下控制端的 ID 之后即可后续向控制端发送消息。
 
 #### 控制端断开连接
 控制端断开时会发送
 ```json
-{"code": 200, "content": {"status":2}, "type": 1}
+{"code": 200, "content": "{\"status\":2}", "type": 1}
 ```
 只需要判断 content 中的 status 为 2 即可。
 
+注意 content 内为 Json 字符串而非对象。
+
 #### 波形与强度指令
 在收到波形与强度指令时，msg 字段中的内容为数组，数组中的每一项为如下样式。 
+```json
+{ "msg": "[{ \"channel\": 1, \"bytes\": \"000000000000000000000000\", \"strength\": 5 }]" }
+```
+
+注意 msg 内为 Json 字符串而非对象。
+
 ```json
 { "channel": 1, "bytes": "000000000000000000000000", "strength": 5 }
 ```
 收到此消息后建议将消息压入先进先出队列，每100毫秒对 channel 为 1 和 2 分别做一次读取操作。
 
 channel 1 为 A 通道。channel 2 为 B 通道。
+
+原版行为中，如果一个数据包内没有收到某一个通道的数据 则停止该通道的波形输出。
 
 bytes 直接通过 KDataUtils 中的 convertStringToByteArray 方法转换为字节数组就可以发送给对应通道了。
 
@@ -171,21 +183,27 @@ strength 是控制端发过来的**增量值**，在本地与本地的基础值�
 #### 上线信息
 控制端连接后，向 被控端ID 发送上线信息。
 ```json
-{"code": 200, "content": {"id": "自己的 ID", "status":3}, "type": 1}
+{"code": 200, "content": "{\"status\":2}", "type": 1}
 ```
 被控端收到此消息后会进入被控界面。
 
+注意 content 内为 Json 字符串而非对象。
+
 #### 发送波形
 ```json
-{"code": 200, "msg": [{ "channel": 1, "bytes": "000000000000000000000000", "strength": 5 }]}
+{"msg": "[{ \"channel\": 1, \"bytes\": \"000000000000000000000000\", \"strength\": 5 }]"}
 ```
-content 中的数组最少为1个，最大为4个。
+msg 中的数组最少为1个，最大为6个。
+
+注意 msg 内为 Json 字符串而非对象。
 
 channel 为通道 1 为 A 通道，2 为 B 通道。bytes 为要发送的波形数组。strength 为强度增量。
 
 #### 断开消息
 ```json
-{"code": 200, "content": {"status":2}, "type": 1}
+{"code": 200, "content": "{\"status\":2}", "type": 1}
 ```
+
+注意 content 内为 Json 字符串而非对象。
 
 发送后直接关闭 NIM 连接即可。

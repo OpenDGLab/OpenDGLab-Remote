@@ -11,7 +11,10 @@ repositories {
     jcenter()
     mavenCentral()
     maven {
-        url  "https://dl.bintray.com/korlibs/korlibs"
+        url "https://dl.bintray.com/korlibs/korlibs"
+    }
+    maven{
+        url "https://kotlin.bintray.com/kotlinx/"
     }
 }
 kotlin {
@@ -52,6 +55,7 @@ kotlin {
             dependencies {
                 implementation "org.jetbrains.kotlinx:kotlinx-serialization-core:1.0.0-RC2"
                 implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.0-RC2"
+                implementation "org.jetbrains.kotlinx:kotlinx-datetime:0.1.0"
             }
         }
         commonTest {

@@ -1,7 +1,9 @@
+import kotlinx.datetime.Clock
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 import kotlin.js.JsName
+
 
 class DGRemoteV1 {
     class Controller(val auth: Auth, qrUrl: String) {
@@ -120,7 +122,7 @@ class DGRemoteV1 {
         public fun processNIM(data: String) : Structure.FeelingMessage? {
             val jsonData = Json.decodeFromString<JsonElement>(data)
             val from = jsonData.jsonObject["from"]!!.jsonPrimitive.content
-            if (from == auth.getUUID()) return null
+            if (toID.isNotEmpty() && from != toID) return null
             val text = jsonData.jsonObject["text"]!!.jsonPrimitive.content
             return when(text) {
                 "a1" -> Structure.FeelingMessage(1, "再强点")
@@ -153,6 +155,7 @@ class DGRemoteV1 {
     class Controlled(val auth: Auth, var strengthA: Int, var strengthB: Int, val limitA: Int, val limitB: Int) {
         private var randomCode = ""
         private var toID = ""
+        private var lastHeartbeat = 0L
 
         @JsName("requestControl")
         public fun requestControl(): Structure.Request {
@@ -207,6 +210,16 @@ class DGRemoteV1 {
         @JsName("isOnline")
         public fun isOnline() = toID.isNotEmpty()
 
+        @JsName("getHeartbeatPassed")
+        public fun getHeartbeatPassed() : Long {
+            return Clock.System.now().toEpochMilliseconds() - lastHeartbeat
+        }
+
+        @JsName("forceDropCurrent")
+        public fun forceDropCurrent() {
+            toID = ""
+        }
+
         @JsName("sendFeeling")
         public fun sendFeeling(channel: Int, feeling: Int) : Structure.NIMMessage {
             return Structure.NIMMessage(
@@ -219,9 +232,10 @@ class DGRemoteV1 {
         public fun processNIM(data: String) : Array<Structure.NIM.V1.SendWaveAndStrength>? {
             val jsonData = Json.decodeFromString<JsonElement>(data)
             val from = jsonData.jsonObject["from"]!!.jsonPrimitive.content
-            if (from == auth.getUUID()) return null
+            if (toID.isNotEmpty() && from != toID) return null
             val text = jsonData.jsonObject["text"]!!.jsonPrimitive.content
             if (text == "998") {
+                lastHeartbeat = Clock.System.now().toEpochMilliseconds()
                 return null
             }
             val textData = Json.decodeFromString<JsonElement>(text)
