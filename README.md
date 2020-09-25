@@ -10,3 +10,8 @@ DG-Lab 目前分为2个通信版本，两者具有完全不同的协议。
 [DG-LAB 稳定版](README.stable.md) 目前 iOS 和 Android 默认下载的版本为此版本。
 
 [DG-Lab OpenBeta](README.openbeta.md) Android 版程序内升级为此版本。
+
+# 协议库
+协议库仅帮助其他库处理信息，本身不具有网络访问能力。
+
+
