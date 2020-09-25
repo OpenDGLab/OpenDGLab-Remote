@@ -3,7 +3,7 @@ import kotlinx.serialization.Serializable
 class Structure {
     companion object {
         const val baseUrl = "http://dungeon-server.top:8888"
-        const val qrUrl = "http://dungeon-lab.cn/appdownload.html#"
+        const val qrUrl = "http://dungeon-lab.cn/appdownload.html"
         const val appKey = "9dac64d02f2e5f11aa5e887d809e911c"
     }
     data class Header(val key: String, val value: String)
@@ -47,18 +47,18 @@ class Structure {
         @Serializable
         data class IMConnectCode(val code: Int, val msg: String, val accstatus: Int, val appkey: String, val randomcode: String, val uuid: String)
         @Serializable
-        data class JoinControl(val code: Int, val msg: String, val accstatus: String, val appkey: String, val devicetype: String, val fromID: String, val strengthA: Int, val strengthB: Int, val toID: String)
+        data class JoinControl(val code: Int, val msg: String, val accstatus: Int, val appkey: String, val devicetype: Int, val fromID: String, val strengthA: Int, val strengthB: Int, val toID: String)
     }
     class NIM {
         class V1 {
             @Serializable
-            data class Join(val code: String = "200", val content: JoinDetail, val type: Int = 1)
+            data class Join(val code: Int, val content: String, val type: Int)
             @Serializable
-            data class JoinDetail(val id: String, val status: Int = 3)
+            data class JoinDetail(val id: String, val status: Int)
             @Serializable
-            data class Disconnect(val code: String = "200", val content: DisconnectDetail, val type: Int = 1)
+            data class Disconnect(val code: Int, val content: String, val type: Int)
             @Serializable
-            data class DisconnectDetail(val status: Int = 2)
+            data class DisconnectDetail(val status: Int)
             @Serializable
             data class SendWaveAndStrength(val channel: Int, val bytes: String, val strength: Int)
             @Serializable

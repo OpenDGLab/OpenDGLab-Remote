@@ -1,11 +1,13 @@
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import kotlin.js.JsName
 
 class Auth {
     private var uuid = ""
     private var token = ""
     private var email = ""
 
+    @JsName("loginWithEmail")
     public fun loginWithEmail(email: String) : Structure.Request {
         this.email = email
         return Structure.Request(
@@ -21,6 +23,7 @@ class Auth {
         )
     }
 
+    @JsName("loginCode")
     public fun loginCode(code: String) : Structure.Request {
         return Structure.Request(
             headers = arrayOf(
@@ -35,6 +38,7 @@ class Auth {
         )
     }
 
+    @JsName("loginWithToken")
     public fun loginWithToken(token: String) : Structure.Request {
         this.token = token
         return Structure.Request(
@@ -51,18 +55,22 @@ class Auth {
         )
     }
 
+    @JsName("isReady")
     public fun isReady() : Boolean {
         return token.isNotEmpty() && uuid.isNotEmpty()
     }
 
+    @JsName("getToken")
     public fun getToken() : String {
         return token
     }
 
+    @JsName("getUUID")
     public fun getUUID() : String {
         return uuid
     }
 
+    @JsName("process")
     public fun process(data: String, requestCode: Int) {
         when (requestCode) {
             0 -> {
