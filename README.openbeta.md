@@ -1,4 +1,4 @@
-# DG-Lab 稳定版远程 API
+# DG-Lab OpenBeta 版远程 API
 URL 基础 `http://dungeon-server.top:8888`
 
 所有发送类型均为 `application/x-www-form-urlencoded`
