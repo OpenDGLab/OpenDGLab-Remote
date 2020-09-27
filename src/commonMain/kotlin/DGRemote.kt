@@ -6,7 +6,7 @@ class DGRemote {
         @JvmStatic
         @JsName("identifyProtocolVersion")
         public fun identifyProtocolVersion(data: String) : String {
-            return if (data.contains("aStrengthRangeMax")) {
+            return if (data.contains("msgType")) {
                 "V2"
             } else {
                 "V1"

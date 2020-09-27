@@ -64,5 +64,43 @@ class Structure {
             @Serializable
             data class WaveStrengthMsg(val msg: String)
         }
+        class V2 {
+            @Serializable
+            data class Connect(val msgType: Int, val conOrDiscon: Int, val pwd: String)
+            //msgType = 0
+            @Serializable
+            data class Config(val msgType: Int, val aStrengthRangeMax: Int, val bStrengthRangeMax: Int, val conOrDiscon: Int, val pwd: String, val realStrengthA: Int, val realStrengthB: Int)
+            //msgType = 4
+            @Serializable
+            data class UpdateStrength(val msgType: Int, val realStrengthA: Int, val realStrengthB: Int)
+            //msgType = 1
+            @Serializable
+            data class Feeling(val msgType: Int, val realStrengthA: Int, val realStrengthB: Int, val feelIndex: Int)
+            //msgType = 3
+            @Serializable
+            data class Wave(val msgType: Int, val dataMsg: String, val pluseData: Array<WaveAndStrength>) {
+                override fun equals(other: Any?): Boolean {
+                    if (this === other) return true
+                    if (other == null || this::class != other::class) return false
+
+                    other as Wave
+
+                    if (msgType != other.msgType) return false
+                    if (dataMsg != other.dataMsg) return false
+                    if (!pluseData.contentEquals(other.pluseData)) return false
+
+                    return true
+                }
+
+                override fun hashCode(): Int {
+                    var result = msgType
+                    result = 31 * result + dataMsg.hashCode()
+                    result = 31 * result + pluseData.contentHashCode()
+                    return result
+                }
+            }
+            @Serializable
+            data class WaveAndStrength(val bytes: String, val channel: Int, val strength: Int)
+        }
     }
 }
