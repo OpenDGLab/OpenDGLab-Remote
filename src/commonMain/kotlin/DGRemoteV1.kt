@@ -67,6 +67,11 @@ class DGRemoteV1 {
             )
         }
 
+        @JsName("getLimit")
+        public fun getLimit() : Pair<Int, Int> {
+            return Pair(limitA, limitB)
+        }
+
         @JsName("canOnline")
         public fun canOnline() = toID.isNotEmpty()
 

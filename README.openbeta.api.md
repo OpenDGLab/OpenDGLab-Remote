@@ -35,6 +35,8 @@
 
 `canConnect() : Boolean` 是否已接受控制端连接。（是否准备好发送数据）
 
+`getLimit() : Pair<Int, Int>` 返回强度限制
+
 `needAck() : Structure.NIMMessage?` 需要回复的数据。如果返回 null 就没有数据需要返回，一般调用 processNIM 后需要检查下。
 
 `disconnect() : Structure.NIMMessage` 通知控制端已断开。

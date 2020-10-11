@@ -54,6 +54,11 @@ class DGRemoteV2 {
             return isConnected
         }
 
+        @JsName("getLimit")
+        public fun getLimit() : Pair<Int, Int> {
+            return Pair(limitA, limitB)
+        }
+
         @JsName("shouldConfig")
         public fun shouldConfig() : Boolean {
             if (shouldDoConfig) {

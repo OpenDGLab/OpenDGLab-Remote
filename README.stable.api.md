@@ -12,6 +12,8 @@
 
 `canOnline() : Boolean` 返回是否已经可以发送控制数据了（在被控端回应连接请求后返回 true）。
 
+`getLimit() : Pair<Int, Int>` 返回强度限制
+
 `heartbeat() : Structure.NIMMessage` 心跳数据包，请每 2 秒发送一次。
 
 `prepareSend(channel: Int, strength: Int, bytes: String)` 发送波形和强度数据。channel 1 为 A 通道，channel 2 为 B 通道。强度值超出对方限制时将会自动无效。请注意 bytes 中的波形数据需要为字符串形式。本方法不会立刻触发要求发送。
