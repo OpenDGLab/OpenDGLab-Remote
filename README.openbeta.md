@@ -1,5 +1,5 @@
 # DG-Lab OpenBeta 版远程 API
-URL 基础 `https://dungeon-server.top:8445`
+URL 基础 `https://dungeon-server.com:8445`
 
 所有发送类型均为 `application/x-www-form-urlencoded`
 
