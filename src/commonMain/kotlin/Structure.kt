@@ -2,7 +2,7 @@ import kotlinx.serialization.Serializable
 
 class Structure {
     companion object {
-        const val baseUrl = "http://dungeon-server.top:8888"
+        const val baseUrl = "https://dungeon-server.com:8445"
         const val qrUrl = "http://dungeon-lab.cn/appdownload.html"
         const val appKey = "9dac64d02f2e5f11aa5e887d809e911c"
     }
