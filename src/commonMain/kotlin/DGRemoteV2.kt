@@ -4,6 +4,10 @@ import kotlinx.serialization.json.*
 import kotlin.js.JsName
 
 class DGRemoteV2 {
+    companion object {
+        private val json: Json
+            get() = Json { ignoreUnknownKeys = true }
+    }
     class Controller(val auth: Auth, val qrUrl: String) {
         val toID = qrUrl.split("#")[1].removeSuffix("2020")
         var limitA = 0
@@ -125,7 +129,7 @@ class DGRemoteV2 {
             val content = Json.decodeFromString<JsonElement>(text)
             return when (content.jsonObject["msgType"]!!.jsonPrimitive.int) {
                 0 -> {
-                    val c = Json { ignoreUnknownKeys = true }.decodeFromJsonElement<Structure.NIM.V2.Config>(content)
+                    val c = json.decodeFromJsonElement<Structure.NIM.V2.Config>(content)
                     if (c.conOrDiscon == 2) {
                         // Logout
                         isConnected = false
@@ -150,13 +154,13 @@ class DGRemoteV2 {
                     null
                 }
                 4 -> {
-                    val c = Json { ignoreUnknownKeys = true }.decodeFromJsonElement<Structure.NIM.V2.UpdateStrength>(content)
+                    val c = json.decodeFromJsonElement<Structure.NIM.V2.UpdateStrength>(content)
                     startA = c.realStrengthA - 9 - aIncrease
                     startB = c.realStrengthB - 9 - bIncrease
                     null
                 }
                 1 -> {
-                    val c = Json { ignoreUnknownKeys = true }.decodeFromJsonElement<Structure.NIM.V2.Feeling>(content)
+                    val c = json.decodeFromJsonElement<Structure.NIM.V2.Feeling>(content)
                     when (c.feelIndex) {
                         0 -> Structure.FeelingMessage(1, "再强点")
                         1 -> Structure.FeelingMessage(1, "轻一点")
@@ -260,7 +264,7 @@ class DGRemoteV2 {
             val content = Json.decodeFromString<JsonElement>(text)
             return when (content.jsonObject["msgType"]!!.jsonPrimitive.int) {
                 0 -> {
-                    val c = Json { ignoreUnknownKeys = true }.decodeFromJsonElement<Structure.NIM.V2.Config>(content)
+                    val c = json.decodeFromJsonElement<Structure.NIM.V2.Config>(content)
                     if (c.conOrDiscon == 2 || c.conOrDiscon == 1) {
                         // Logout
                         toID = ""
@@ -285,7 +289,7 @@ class DGRemoteV2 {
                     null
                 }
                 3 -> {
-                    val msg = Json { ignoreUnknownKeys = true }.decodeFromJsonElement<Structure.NIM.V2.Wave>(content)
+                    val msg = json.decodeFromJsonElement<Structure.NIM.V2.Wave>(content)
                     msg.pluseData.mapNotNull {
                         when(it.channel) {
                             1 -> Structure.NIM.V2.WaveAndStrength(it.bytes, 1, it.strength + strengthA)

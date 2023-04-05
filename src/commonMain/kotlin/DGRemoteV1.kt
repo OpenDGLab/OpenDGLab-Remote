@@ -4,8 +4,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 import kotlin.js.JsName
 
-
+@Deprecated("API Deprecated")
 class DGRemoteV1 {
+    @Deprecated("API Deprecated")
     class Controller(val auth: Auth, qrUrl: String) {
         val randomCode = qrUrl.split("#")[1]
         private var limitA = 0
@@ -157,6 +158,7 @@ class DGRemoteV1 {
         }
     }
 
+    @Deprecated("API Deprecated")
     class Controlled(val auth: Auth, var strengthA: Int, var strengthB: Int, val limitA: Int, val limitB: Int) {
         private var randomCode = ""
         private var toID = ""

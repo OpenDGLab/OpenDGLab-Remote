@@ -1,5 +1,5 @@
 # DG-Lab 稳定版远程 API
-URL 基础 `http://dungeon-server.top:8888`
+URL 基础 `https://dungeon-server.com:8445`
 
 所有发送类型均为 `application/x-www-form-urlencoded`
 
@@ -27,7 +27,7 @@ POST /tokenVerify
 `uuid` 不知道为什么有这个参数，但是没用。
 
 #### 返回值
-`uuid` 该 token 的 UUID
+`appkey` NIM AppKey 一般也没用
 
 ### 发送验证码
 POST /emailCodeSend
@@ -50,160 +50,114 @@ POST /emailRegVerify
 #### 返回值
 `token` 需要保存下来其他接口用
 
-### 创建远程连接
-POST /getIMConnectCode
-
-#### 参数
-`type` 固定为 1  
-`strengthA` 限制 A 通道强度增量  
-`strengthB` 限制 B 通道强度增量  
-`limited` 固定为 0 即可  
-
-#### 返回值
-`accstatus` 在线信息 可以无视  
-`appkey` NIM AppKey 创建云信 NIM 连接时用  
-`randomcode` 连接码 创建二维码用  
-`uuid` 自己的用户 ID 连接 NIM 用
-
-### 加入控制
-POST /joinControl
-
-#### 参数
-`randomCode` 连接码 二维码扫描后 # 后的数字
-
-#### 返回值
-`accstatus` 在线信息 可以无视  
-`appkey` NIM AppKey 创建云信 NIM 连接时用  
-`devicetype` 设备类型 目前可以无视  
-`fromID` 自己的 UUID  
-`strengthA` A 通道增量限制  
-`strengthB` B 通道增量限制  
-`toID` 受控端 UUID  
-
-### 退出远程连接
-POST /accidentalIMLogOut
-
-#### 参数
-`a` 固定为 空  
-
-#### 返回值
-无特殊返回值
-
 ## 生成二维码
 二维码内为网址
 
-`http://dungeon-lab.cn/appdownload.html#` 后面加连接码即可。
+`http://dungeon-lab.cn/appdownload.html#` 后面加登录时获得的 UUID 后面再加上 2020。2020 为连接密码，目前固定。
 
 ## 建立云信连接
 建立连接时使用以下参数
 `appKey` getIMConnectCode 中获取的 appkey  
-`account` getIMConnectCode 中获取的 uuid  
+`account` getIMConnectCode 中获取的 uuid 加 2020  
 `token` 登录时返回的 token  
 
 ## 通讯过程
-受控端的ID为上方加入控制的接口中返回的 toID。    
-控制端发送**上线信息**后，被控端正式进入受控模式。  
-然后被控端开始每2秒发送**心跳消息**。  
-控制端开始发出**波形与强度指令**进入工作模式。  
-被控端可以发出**通道消息**让控制端显示一些信息。  
-由控制端断开连接时，被控端发出**断开消息**后离线。
-由被控端断开连接时，直接关闭云信连接即可。
+扫码后，将 # 后面的值取出来，前32位为被控端 ID，后面为连接密码。目前固定为 2020。
+建立连接后，控制端向被控端 ID 发出**连接请求**。  
+然后被控端验证密码（其实并没有）并返回**配置信息**。里面记载有允许的增量，目前的强度值。是否连接等信息。  
+此时，被控端进入受控模式。  
+被控端可以发出**当前值更新信息**通知控制端已修改可调整的范围值。  
+被控端也可以发出**感受信息**在控制端上显示一些信息。  
+控制端可以发出**波形与强度指令**进入工作模式。
+退出时退出方发出**退出信息**后断开连接。
+
+## 共享的信息
+### 退出信息
+```json
+{"aStrengthRangeMax":0,"bStrengthRangeMax":0,"conOrDiscon":2,"feelIndex":0,"msgType":0,"pwd":"2020","realStrengthA":0,"realStrengthB":0}
+```
+msgType 为 0，conOrDiscon 为 2，发送后断开连接。
 
 ## 被控端
-### 发送的消息
-#### 心跳消息
-被控端建立连接后，需要每2秒发送纯文本信息 `998` 进行心跳。不发送此消息会导致控制端出现被控端已离线消息并离开控制。
-
-#### 通道消息
-发送纯文本消息 `a1` `a2` `a3` `a4` 会使控制端在 A 通道上显示被控端 A 通道上可以发送的4个消息。同理 `b1` `b2` `b3` `b4`。
-
-| 消息 | 文字 |
-|:--  |:--  |
-| a1 b1 | 再强点 |
-| a2 b2 | 轻一点 |
-| a3 b3 | 好舒服 |
-| a4 b4 | 换一个 |
-
-### 接收的消息
-接收的消息均为 JSON 字符串。
-
-收到消息后先将 JSON 字符串转为您可以处理的格式。
-#### 控制端已连接
-控制端已连接后会发送下列信息
-
+### 收到的信息
+#### 连接请求
 ```json
-{"code": 200, "content": "{\"id\": \"控制端的 ID\", \"status\":3}", "type": 1}
+{"aStrengthRangeMax":0,"bStrengthRangeMax":0,"conOrDiscon":0,"feelIndex":0,"msgType":0,"pwd":"2020","realStrengthA":0,"realStrengthB":0}
 ```
-只需要判断 content 中的 status 为 3 即可。
-
-注意 content 内为 Json 字符串而非对象。
-
-收到此消息后被控端会进入受控模式并关闭等待连接对话框。记下控制端的 ID 之后即可后续向控制端发送消息。
-
-#### 控制端断开连接
-控制端断开时会发送
-```json
-{"code": 200, "content": "{\"status\":2}", "type": 1}
-```
-只需要判断 content 中的 status 为 2 即可。
-
-注意 content 内为 Json 字符串而非对象。
+收到消息后验证 pwd 是否为自己要的 pwd （目前固定为 2020），如果正确，回复**配置信息**
 
 #### 波形与强度指令
-在收到波形与强度指令时，msg 字段中的内容为数组，数组中的每一项为如下样式。 
 ```json
-{ "msg": "[{ \"channel\": 1, \"bytes\": \"000000000000000000000000\", \"strength\": 5 }]" }
+{"aStrengthRangeMax":0,"bStrengthRangeMax":0,"conOrDiscon":0,"dataMsg":"[{\"bytes\":\"000010000000000100100001\",\"channel\":1,\"strength\":0},{\"bytes\":\"000010100000000100100001\",\"channel\":1,\"strength\":0},{\"bytes\":\"000010100000000100100001\",\"channel\":1,\"strength\":0},{\"bytes\":\"000010100000000100100001\",\"channel\":1,\"strength\":0}]","feelIndex":0,"msgType":3,"pluseData":[{"bytes":"000010000000000100100001","channel":1,"strength":0},{"bytes":"000010100000000100100001","channel":1,"strength":0},{"bytes":"000010100000000100100001","channel":1,"strength":0},{"bytes":"000010100000000100100001","channel":1,"strength":0}],"realStrengthA":0,"realStrengthB":0}
 ```
+msgType 为 3  
+收到此消息后建议将消息压入先进先出队列，每100毫秒对 channel 为 1 和 2 分别做一次读取操作。  
+dataMsg 为 pluseData 的字符串模式。一般无视即可。  
+pluseData 中含有传输过来的波形和强度信息，信息在每个消息中每通道最多4条。  
+channel 为通道 1 为 A 通道，2 为 B 通道。bytes 为要发送的波形数组。strength 为强度增量。  
+变更强度时，将 strength 和当前基础值相加后为目标强度值。    
+收到后将 bytes 通过 KDataUtils 中的 convertStringToByteArray 方法转换为字节数组就可以发送给对应通道了。
 
-注意 msg 内为 Json 字符串而非对象。
-
+### 发出的信息
+#### 配置信息
 ```json
-{ "channel": 1, "bytes": "000000000000000000000000", "strength": 5 }
+{"aStrengthRangeMax":30,"bStrengthRangeMax":35,"conOrDiscon":0,"feelIndex":0,"msgType":0,"pwd":"2020","realStrengthA":10,"realStrengthB":10}
 ```
-收到此消息后建议将消息压入先进先出队列，每100毫秒对 channel 为 1 和 2 分别做一次读取操作。
+msgType 为 0，realStrength 为当前对应通道的强度加9，pwd 为之前的密码。StrengthRangeMax 为强度增量限制。
 
-channel 1 为 A 通道。channel 2 为 B 通道。
+#### 当前值更新信息
+```json
+{"aStrengthRangeMax":0,"bStrengthRangeMax":0,"conOrDiscon":0,"feelIndex":0,"msgType":4,"realStrengthA":10,"realStrengthB":10}
+```
+msgType 为 4，realStrength 更新为当前值。此方法在被控端修改自己的基础值时调用。
 
-原版行为中，如果一个数据包内没有收到某一个通道的数据 则停止该通道的波形输出。
-
-bytes 直接通过 KDataUtils 中的 convertStringToByteArray 方法转换为字节数组就可以发送给对应通道了。
-
-strength 是控制端发过来的**增量值**，在本地与本地的基础值相加后发送给设备即可。
+#### 感受信息
+```json
+{"aStrengthRangeMax":0,"bStrengthRangeMax":0,"conOrDiscon":0,"feelIndex":0,"msgType":1,"realStrengthA":10,"realStrengthB":10}
+```
+msgType 为 1，feelIndex 为要发送的感受信息。
+| feelIndex | 通道 | 消息 |
+|:-- |:-- |:-- |
+| 0 | A | 再强点 |
+| 1 | A | 轻一点 |
+| 2 | A | 好舒服 |
+| 3 | A | 换一个 |
+| 4 | B | 再强点 |
+| 5 | B | 轻一点 |
+| 6 | B | 好舒服 |
+| 7 | B | 换一个 |
 
 ## 控制端
-发送的消息全部为 JSON 字符串。
-
-### 接收的消息
-#### 心跳消息
-会收到字符串 `998`，6秒内没收到即为掉线，一般无视即可。
-#### 通道消息
-会收到字符串 `a1` `a2` `a3` `a4` `b1` `b2` `b3` `b4` ，对应关系见上方表格。
-
-### 发送的消息
-#### 上线信息
-控制端连接后，向 被控端ID 发送上线信息。
+### 收到的信息
+#### 配置信息
 ```json
-{"code": 200, "content": "{\"status\":2}", "type": 1}
+{"aStrengthRangeMax":30,"bStrengthRangeMax":35,"conOrDiscon":0,"feelIndex":0,"msgType":0,"pwd":"2020","realStrengthA":10,"realStrengthB":10}
 ```
-被控端收到此消息后会进入被控界面。
+msgType 为 0 时  
+realStrengthA 和 realStrengthB 为 A 和 B 通道的当前值，此数字减去 9 为当前通道强度值。aStrengthRangeMax 和 bStrengthRangeMax 为强度增量限制。
 
-注意 content 内为 Json 字符串而非对象。
-
-#### 发送波形
+#### 当前值更新信息
 ```json
-{"msg": "[{ \"channel\": 1, \"bytes\": \"000000000000000000000000\", \"strength\": 5 }]"}
+{"aStrengthRangeMax":0,"bStrengthRangeMax":0,"conOrDiscon":0,"feelIndex":0,"msgType":4,"realStrengthA":10,"realStrengthB":10}
 ```
-msg 中的数组最少为1个，最大为6个。
+msgType 为 4，realStrength 更新为当前值。此方法在被控端修改自己的基础值时调用。请注意收到后与原有值进行计算以重新规约最大最小值。
 
-注意 msg 内为 Json 字符串而非对象。
-
-channel 为通道 1 为 A 通道，2 为 B 通道。bytes 为要发送的波形数组。strength 为强度增量。
-
-#### 断开消息
+#### 感受信息
 ```json
-{"code": 200, "content": "{\"status\":2}", "type": 1}
+{"aStrengthRangeMax":0,"bStrengthRangeMax":0,"conOrDiscon":0,"feelIndex":0,"msgType":1,"realStrengthA":10,"realStrengthB":10}
+```
+见被控端
+
+### 发出的信息
+#### 连接请求
+```json
+{"aStrengthRangeMax":0,"bStrengthRangeMax":0,"conOrDiscon":0,"feelIndex":0,"msgType":0,"pwd":"2020","realStrengthA":0,"realStrengthB":0}
 ```
 
-注意 content 内为 Json 字符串而非对象。
 
-发送后直接关闭 NIM 连接即可。
+#### 波形与强度指令
+```json
+{"aStrengthRangeMax":0,"bStrengthRangeMax":0,"conOrDiscon":0,"dataMsg":"[{\"bytes\":\"000010000000000100100001\",\"channel\":1,\"strength\":0},{\"bytes\":\"000010100000000100100001\",\"channel\":1,\"strength\":0},{\"bytes\":\"000010100000000100100001\",\"channel\":1,\"strength\":0},{\"bytes\":\"000010100000000100100001\",\"channel\":1,\"strength\":0}]","feelIndex":0,"msgType":3,"pluseData":[{"bytes":"000010000000000100100001","channel":1,"strength":0},{"bytes":"000010100000000100100001","channel":1,"strength":0},{"bytes":"000010100000000100100001","channel":1,"strength":0},{"bytes":"000010100000000100100001","channel":1,"strength":0}],"realStrengthA":0,"realStrengthB":0}
+```
+msgType 为 3  
+主要见被控端**波形与强度指令**章节，请注意，strength 是强度增量。
